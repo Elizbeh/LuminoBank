@@ -1,6 +1,7 @@
-const db = require('./config/db');
+const db = require('../config/db'); // Use the shared database connection
 
 const setupDatabase = () => {
+    // Step 1: Create the database if it doesn't exist.
     const createDatabaseQuery = `CREATE DATABASE IF NOT EXISTS LuminoBank;`;
 
     db.query(createDatabaseQuery, (err) => {
@@ -11,35 +12,39 @@ const setupDatabase = () => {
 
         console.log('✅ Database "LuminoBank" created or already exists.');
 
+        // Step 2: Create tables
         const createCustomersTable = `
-        CREATE TABLE IF NOT EXISTS customers (
-            customer_id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(50) NOT NULL,
-            email VARCHAR(50) NOT NULL,
-            password VARCHAR(255) NOT NULL
-        );`;
+            CREATE TABLE IF NOT EXISTS customers (
+                customer_id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(50) NOT NULL,
+                email VARCHAR(50) NOT NULL,
+                password VARCHAR(255) NOT NULL
+            );
+        `;
 
         const createAccountsTable = `
-        CREATE TABLE IF NOT EXISTS accounts (
-            account_id INT AUTO_INCREMENT PRIMARY KEY,
-            customer_id INT,
-            balance DECIMAL(10,2) NULL DEFAULT(0),
-            FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
-        );`;
+            CREATE TABLE IF NOT EXISTS accounts (
+                account_id INT AUTO_INCREMENT PRIMARY KEY,
+                customer_id INT,
+                balance DECIMAL(10,2) NULL DEFAULT(0),
+                FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
+            );
+        `;
 
         const createTransactionsTable = `
-        CREATE TABLE IF NOT EXISTS transactions (
-            transaction_id INT AUTO_INCREMENT PRIMARY KEY,
-            from_account INT,
-            to_account INT,
-            amount DECIMAL(10,2),
-            FOREIGN KEY (from_account) REFERENCES accounts(account_id),
-            FOREIGN KEY (to_account) REFERENCES accounts(account_id)
-        );`;
+            CREATE TABLE IF NOT EXISTS transactions (
+                transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+                from_account INT,
+                to_account INT,
+                amount DECIMAL(10,2),
+                FOREIGN KEY (from_account) REFERENCES accounts(account_id),
+                FOREIGN KEY (to_account) REFERENCES accounts(account_id)
+            );
+        `;
 
         const createProcedureQuery = `
             DROP PROCEDURE IF EXISTS TransferMoney;
-            
+
             CREATE PROCEDURE TransferMoney(
                 IN sender_id INT,
                 IN receiver_id INT,
@@ -72,6 +77,7 @@ const setupDatabase = () => {
             END;
         `;
 
+        // Run the queries
         db.query(createCustomersTable, (err) => {
             if (err) {
                 console.error('❌ Error creating customers table:', err);
@@ -104,4 +110,5 @@ const setupDatabase = () => {
     });
 };
 
+// Run setupDatabase only if necessary (e.g., first time setup or manually triggered)
 setupDatabase();
